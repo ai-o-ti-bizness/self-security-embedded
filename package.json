@@ -1,0 +1,61 @@
+{
+  "name": "self-security-embedded",
+  "version": "0.1.0",
+  "description": "Self security embedded project",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "pm2": "./node_modules/pm2/bin/pm2",
+    "simple_start": "node index.js",
+    "start": "pm2 start index.js -f --no-daemon -s --name app",
+    "test": "NODE_ENV=TEST node_modules/mocha/bin/mocha --recursive spec/*.spec.js",
+    "coverage": "nyc --reporter=lcov --reporter=text npm run test"
+  },
+  "dependencies": {
+    "bluetooth-scanner": "1.0.1",
+    "bluetoothctl": "1.1.0",
+    "body-parser": "1.18.3",
+    "cls-hooked": "4.2.2",
+    "express": "4.16.4",
+    "fecha": "2.3.3",
+    "handlebars": "4.0.12",
+    "helmet": "3.14.0",
+    "i": "0.3.6",
+    "joi": "14.0.0",
+    "json-refs": "3.0.12",
+    "morgan": "1.9.1",
+    "nodemailer": "4.6.8",
+    "npm": "6.4.1",
+    "pm2": "3.2.2",
+    "read-last-lines": "1.6.0",
+    "request": "2.88.0",
+    "request-promise": "4.2.2",
+    "swagger-ui-express": "4.0.1",
+    "uuid": "3.3.2",
+    "winston": "3.1.0"
+  },
+  "devDependencies": {
+    "chai": "4.2.0",
+    "mocha": "5.2.0",
+    "nyc": "13.0.1",
+    "proxyquire": "2.1.0",
+    "sinon": "6.3.5",
+    "supertest": "3.3.0"
+  },
+  "nyc": {
+    "exclude": [
+      "**/spec/**",
+      "**/test/**"
+    ]
+  },
+  "standard": {
+    "globals": [
+      "afterEach",
+      "before",
+      "beforeEach",
+      "describe",
+      "it"
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+.nyc_output
+.scannerwork
+.vscode
+coverage
+node_modules
+tmp
+swagger/swagger.json
