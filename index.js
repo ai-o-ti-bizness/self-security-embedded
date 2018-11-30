@@ -14,6 +14,8 @@ const logRequests = require('./services/logger/requestLoggerMiddleware')({ route
 const biznessRoute = require('./biznessRoute/biznessRouter')
 const os = require('os')
 
+const { doBluetoothWork } = require('./bluetooth')
+const httpClient = require('./services/http-client')()
 // Authorization headers
 const allowedHeaders = [
   'Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Cache-Control',
@@ -61,6 +63,26 @@ const handleError = (err, req, res, next) => {
   logger.error({ requestId: req.id, err })
 }
 
+const loopOpenClose = async () => {
+  const bts = await doBluetoothWork()
+  logger.info('Bts: \n')
+  logger.info(bts)
+  if (bts.length > 0) {
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-User-Email': 'admin@poli.usp.br',
+      'Accept': 'application/json',
+      'X-User-Token': 'W2AdicN4HSxRmvF9Uz5a'    
+    }
+    const body = {	
+      device: {
+        bluetooth_id: bts[0].btAddress
+      }
+    }
+    const result = await httpClient.callHTTP('POST', 'https://self-security.herokuapp.com/verify', headers, body)
+  }
+}
+
 // Events handlers when closing server
 process.on('uncaughtException', async (err) => {
   logger.error('Uncaught Exception\n', err)
@@ -93,7 +115,7 @@ const init = async (app) => {
   app.get('/', (req, res) => res.json({ status: 'The Self-Security-Embedded API lives!' }))
 
   app.use(biznessRoute)
-
+  
   if (!isTest) {
     try {
       server = app.listen(port, () => {
@@ -107,14 +129,13 @@ const init = async (app) => {
         openHttpConnections[key] = httpConnection
         httpConnection.on('close', () => delete openHttpConnections[key])
       })
-	//await detectDevices()
-    } catch (err) {
+	  } catch (err) {
       logger.error(`Error occurred when tried to listen to port ${port}\n`, err)
       logger.info('Exiting process')
       process.exit()
     }
   }
-
+  await loopOpenClose()
   return app
 }
 
