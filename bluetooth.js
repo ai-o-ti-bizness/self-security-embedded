@@ -30,7 +30,7 @@ const parseBtmgmtFindResult = (btmgmtStr) => {
     .map(c => c.split('hci0 type')[0])
     .map(raw => {
       const lines = raw.split('\n')
-      const btAddress = lines[0].split(' ')[0]
+      const btAddress = lines[0].split(' ')[0].toLowerCase()
       const rssi = Number(lines[0].slice(lines[0].indexOf('rssi'), lines[0].indexOf('flags')).trim().slice(5))
       const type = lines[0].slice(lines[0].indexOf('type ') + 5, lines[0].indexOf('rssi')).trim()
       const flags = lines[0].split('flags')[1].trim()
@@ -45,7 +45,7 @@ const parseBtmgmtFindResult = (btmgmtStr) => {
         eirLen
       }
     })
-  return devs
+  return devs.sort((a, b) => b.rssi - a.rssi)
 }
 
 /**

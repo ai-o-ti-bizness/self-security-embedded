@@ -15,6 +15,8 @@ const biznessRoute = require('./biznessRoute/biznessRouter')
 const os = require('os')
 
 const { doBluetoothWork } = require('./bluetooth')
+const { toogleGpio, redLed, greenLed } = require('./gpio')
+
 const httpClient = require('./services/http-client')()
 // Authorization headers
 const allowedHeaders = [
@@ -63,24 +65,43 @@ const handleError = (err, req, res, next) => {
   logger.error({ requestId: req.id, err })
 }
 
-const loopOpenClose = async () => {
+const loopOpenClose = async function () {
   const bts = await doBluetoothWork()
   logger.info('Bts: \n')
   logger.info(bts)
   if (bts.length > 0) {
-    const headers = {
-      'Content-Type': 'application/json',
-      'X-User-Email': 'admin@poli.usp.br',
-      'Accept': 'application/json',
-      'X-User-Token': 'W2AdicN4HSxRmvF9Uz5a'    
-    }
-    const body = {	
-      device: {
-        bluetooth_id: bts[0].btAddress
+    const results = []
+    for (const bt of bts) {
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-User-Email': 'admin@poli.usp.br',
+        'Accept': 'application/json',
+        'X-User-Token': 'W2AdicN4HSxRmvF9Uz5a'    
       }
+      const body = {	
+        device: {
+          bluetooth_id: bt.btAddress
+        }
+      }
+      const result = await httpClient.callHTTP('POST', 'https://self-security.herokuapp.com/verify', headers, body)
+
+      results.push({
+        accepted: result.statusCode === 200,
+        id: bt.btAddress
+      })
     }
-    const result = await httpClient.callHTTP('POST', 'https://self-security.herokuapp.com/verify', headers, body)
+    logger.info('Devices:\n', results)
+    const overall = results.reduce((p, c) => p || c, false)
+    logger.info('Overall: ', overall)
+    if (overall) {
+      toogleGpio(greenLed)
+    } else {
+      toogleGpio(redLed)
+    }
   }
+  setTimeout(() => {
+    loopOpenClose()
+  }, 500);
 }
 
 // Events handlers when closing server
