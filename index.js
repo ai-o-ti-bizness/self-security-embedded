@@ -15,7 +15,7 @@ const biznessRoute = require('./biznessRoute/biznessRouter')
 const os = require('os')
 
 const { doBluetoothWork } = require('./bluetooth')
-const { toogleGpio, redLed, greenLed, setPin } = require('./gpio')
+const { toogleGpio, redLed, greenLed, buzzerPin, setPin, blueWaitingLed } = require('./gpio')
 
 const httpClient = require('./services/http-client')()
 // Authorization headers
@@ -66,6 +66,7 @@ const handleError = (err, req, res, next) => {
 }
 
 const loopOpenClose = async function () {
+  setPin(blueWaitingLed, 1)
   let bts = await doBluetoothWork()
   logger.info('Bts: \n')
   logger.info(bts)
@@ -83,21 +84,27 @@ const loopOpenClose = async function () {
       }
     }
     const result = await httpClient.callHTTP('POST', 'http://self-security.herokuapp.com:80/verify', headers, body)
-
-
+  
     logger.info('Devices:\n', bts.map(b => b.btAddress))
     if (result.statusCode === 200) {
       setPin(redLed, 0)
-      toogleGpio(greenLed)
+      setPin(blueWaitingLed, 0)
+      await toogleGpio(greenLed)
     } else {
 	    console.log('Unauthorized')
       setPin(greenLed, 0)
-      toogleGpio(redLed)
+      setPin(blueWaitingLed, 0)
+      await Promise.all([ toogleGpio(redLed), toogleGpio(buzzerPin) ])
     }
+  } else {
+    setPin(blueWaitingLed, 0)
   }
-  setTimeout(async () => {
-    await loopOpenClose()
-  }, 10);
+  return new Promise((resolve, reject) => {
+    setTimeout(async () => {
+      await loopOpenClose()
+      resolve()
+    }, 10);
+  })
 }
 
 // Events handlers when closing server
@@ -108,11 +115,19 @@ process.on('uncaughtException', async (err) => {
 
 process.on('SIGTERM', () => {
   logger.error('Received SIGTERM')
+  setPin(greenLed, 0)
+  setPin(blueWaitingLed, 0)
+  setPin(redLed, 0)
+  setPin(buzzerPin, 0)
   shutdown(0)
 })
 
 process.on('SIGINT', () => {
   logger.error('Received SIGINT')
+  setPin(greenLed, 0)
+  setPin(blueWaitingLed, 0)
+  setPin(redLed, 0)
+  setPin(buzzerPin, 0)
   shutdown(0)
 })
 
