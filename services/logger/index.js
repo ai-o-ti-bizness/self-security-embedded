@@ -7,7 +7,7 @@ const fs = require('fs')
 const path = require('path')
 const { ERROR_FILENAME, COMBINED_FILENAME } = require('./constants').LOG_CONFIG
 const { environment, logDir, isTest } = require('./config')
-let consoleMode = process.env.CONSOLE_MODE || 'escaped'
+let consoleMode = process.env.CONSOLE_MODE || 'unescaped'
 
 const LOGS_FOLDER = logDir
 

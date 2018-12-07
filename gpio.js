@@ -9,9 +9,9 @@ const setPin = (pin = 4, value = 0) => {
 }
 
 const toogleGpio = async (pin = 4) => {
-  setPin(redLed, 1)
+  setPin(pin, 1)
   setTimeout(() => {
-    setPin(redLed, 0)
+    setPin(pin, 0)
   }, 4000);
 }
 

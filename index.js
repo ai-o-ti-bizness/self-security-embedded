@@ -66,42 +66,36 @@ const handleError = (err, req, res, next) => {
 }
 
 const loopOpenClose = async function () {
-  const bts = await doBluetoothWork()
+  let bts = await doBluetoothWork()
   logger.info('Bts: \n')
   logger.info(bts)
   if (bts.length > 0) {
-    const results = []
-    for (const bt of bts) {
-      const headers = {
-        'Content-Type': 'application/json',
-        'X-User-Email': 'admin@poli.usp.br',
-        'Accept': 'application/json',
-        'X-User-Token': 'W2AdicN4HSxRmvF9Uz5a'    
-      }
-      const body = {	
-        device: {
-          bluetooth_id: bt.btAddress
-        }
-      }
-      const result = await httpClient.callHTTP('POST', 'https://self-security.herokuapp.com/verify', headers, body)
-
-      results.push({
-        accepted: result.statusCode === 200,
-        id: bt.btAddress
-      })
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-User-Email': 'admin@poli.usp.br',
+      'Accept': 'application/json',
+      'X-User-Token': 'W2AdicN4HSxRmvF9Uz5a'    
     }
-    logger.info('Devices:\n', results)
-    const overall = results.reduce((p, c) => p || c, false)
-    logger.info('Overall: ', overall)
-    if (overall) {
+    const body = {	
+      device: {
+        bluetooth_ids: bts.map(b => b.btAddress)
+      }
+    }
+    const result = await httpClient.callHTTP('POST', 'http://self-security.herokuapp.com:80/verify', headers, body)
+
+
+    logger.info('Devices:\n', bts.map(b => b.btAddress))
+    if (result.statusCode === 200) {
       toogleGpio(greenLed)
     } else {
+	    console.log('Unauthorized')
       toogleGpio(redLed)
     }
   }
-  setTimeout(() => {
-    loopOpenClose()
-  }, 500);
+  setTimeout(async () => {
+    await loopOpenClose()
+  }, 10);
 }
 
 // Events handlers when closing server
