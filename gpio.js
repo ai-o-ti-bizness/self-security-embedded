@@ -18,6 +18,7 @@ const toogleGpio = async (pin = 4) => {
 module.exports = {
   toogleGpio,
   greenLed,
-  redLed
+  redLed,
+  setPin
 }
 

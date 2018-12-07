@@ -15,7 +15,7 @@ const biznessRoute = require('./biznessRoute/biznessRouter')
 const os = require('os')
 
 const { doBluetoothWork } = require('./bluetooth')
-const { toogleGpio, redLed, greenLed } = require('./gpio')
+const { toogleGpio, redLed, greenLed, setPin } = require('./gpio')
 
 const httpClient = require('./services/http-client')()
 // Authorization headers
@@ -87,9 +87,11 @@ const loopOpenClose = async function () {
 
     logger.info('Devices:\n', bts.map(b => b.btAddress))
     if (result.statusCode === 200) {
+      setPin(redLed, 0)
       toogleGpio(greenLed)
     } else {
 	    console.log('Unauthorized')
+      setPin(greenLed, 0)
       toogleGpio(redLed)
     }
   }
