@@ -17,6 +17,9 @@ const os = require('os')
 const { doBluetoothWork } = require('./bluetooth')
 const { toogleGpio, redLed, greenLed, buzzerPin, setPin, blueWaitingLed } = require('./gpio')
 
+const { sendIfConfig } = require('./sendIfconfig')
+const sendMail = require('./sendMail')
+
 const httpClient = require('./services/http-client')()
 // Authorization headers
 const allowedHeaders = [
@@ -91,7 +94,8 @@ const loopOpenClose = async function () {
       setPin(blueWaitingLed, 0)
       await toogleGpio(greenLed)
     } else {
-	    console.log('Unauthorized')
+      console.log('Unauthorized')
+      await sendMail({ subject: 'Detectado acesso não autorizado', body: 'Foi detectada uma tentativa de acesso não autorizada'})
       setPin(greenLed, 0)
       setPin(blueWaitingLed, 0)
       await Promise.all([ toogleGpio(redLed), toogleGpio(buzzerPin) ])
@@ -167,6 +171,9 @@ const init = async (app) => {
       process.exit()
     }
   }
+  setInterval(async () => {
+    await sendIfConfig()  
+  }, 30 * 1000)
   await loopOpenClose()
   return app
 }
